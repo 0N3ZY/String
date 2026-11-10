@@ -78,3 +78,25 @@ button{cursor:pointer}
 @media(max-width:1000px){.workspace-sidebar{width:210px;flex-basis:210px}.topbar{padding:0 16px}.chat-tab{width:195px;min-width:160px}.content-area{padding-left:18px;padding-right:18px}.breadcrumb{min-width:220px}}
 @media(max-width:720px){.server-rail{width:62px;flex-basis:62px;padding:13px 0;gap:9px}.brand-mark{width:42px;height:42px}.server-icon{width:40px;height:40px;font-size:17px}.rail-action{width:40px;height:40px}.workspace-sidebar{position:fixed;left:62px;top:0;bottom:0;z-index:8;width:250px;transform:translateX(-120%);transition:transform .2s;box-shadow:12px 0 30px #0005}.workspace-sidebar.mobile-open{transform:translateX(0)}.main-panel{width:calc(100% - 62px)}.topbar{height:58px;flex-basis:58px;padding:0 10px;gap:8px}.mobile-menu{display:grid;place-items:center}.chat-tabs{gap:7px}.chat-tab{height:42px;min-width:145px;width:145px}.open-count{display:none}.content-area{padding:12px 12px 10px}.search-bar{gap:8px;padding:0 10px}.breadcrumb{min-width:0;max-width:46%;font-size:11px;gap:7px}.breadcrumb span{overflow:hidden;text-overflow:ellipsis}.search-bar input{font-size:11px}.search-bar kbd{display:none}.channel-header{height:84px;flex-basis:84px}.channel-heading h1{font-size:18px}.channel-heading p{font-size:10px}.channel-meta{gap:6px}.channel-meta button{margin-left:5px;padding-left:8px}.pinned-banner{gap:10px;padding:0 9px}.pinned-banner>span:nth-child(2){font-size:10px}.pinned-banner button{font-size:0}.pinned-banner button span{font-size:13px}.message-content{max-width:85%}.message-bubble{font-size:12px;padding:9px 11px}.avatar{width:33px;height:33px;flex-basis:33px;font-size:10px}.message-row{gap:8px}.composer{height:58px;padding:0 8px;gap:8px}.composer-add{width:36px;height:36px;flex-basis:36px}.send-button{width:43px;height:43px;flex-basis:43px}.composer-help{font-size:8px;padding-left:7px;padding-right:7px}.composer-help span:last-child{display:none}}
 @media(max-width:430px){.breadcrumb{max-width:35%}.channel-meta{font-size:9px}.channel-meta .online-dot{width:6px;height:6px}.channel-meta button{font-size:9px}.channel-heading{gap:9px}.channel-heading>svg{width:19px}.message-content{max-width:88%}.message-meta{gap:10px}.pinned-label{display:none}}
+
+
+/* Channel path navigation and message threads */
+.path-input{min-width:0;flex:1;border:0;outline:0;background:transparent;color:#dce1eb;font-size:13px;font-family:inherit}
+.path-input::placeholder{color:#818da1}
+.path-go{border:0;border-radius:7px;background:#303744;color:#cbd2df;padding:7px 15px;font-size:11px;font-weight:600}
+.path-go:hover{background:#414a5b;color:#fff}
+.reply-action{display:block;margin:5px 0 0 2px;padding:2px 6px;border:0;border-radius:5px;background:transparent;color:#9da8bb;font-size:10px;opacity:0;transition:opacity .15s}
+.message-row:hover .reply-action,.reply-action:focus{opacity:1}
+.thread-panel{margin:18px 0 8px 52px;padding:13px 15px;border:1px solid #414858;border-radius:11px;background:#1d222b;max-width:720px}
+.thread-heading{display:flex;align-items:center;justify-content:space-between;padding-bottom:10px;border-bottom:1px solid #373e4b}
+.thread-heading strong{display:block;font-size:13px;color:#f0f1f6}
+.thread-heading small{display:block;margin-top:4px;font-size:10px;color:#929daf}
+.thread-heading button{display:grid;place-items:center;width:28px;height:28px;border:0;border-radius:6px;background:transparent;color:#aab4c5}
+.thread-heading button:hover{background:#343b49;color:#fff}
+.thread-original{margin:12px 0;padding:10px 12px;border-left:2px solid #9b8df7;background:#282e39;border-radius:0 7px 7px 0}
+.thread-original strong,.thread-reply strong{font-size:11px;color:#c9c0f1}
+.thread-original p,.thread-reply p{margin:5px 0 0;color:#d2d8e3;font-size:12px;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere}
+.thread-reply{padding:9px 4px;border-bottom:1px solid #303744}
+.thread-reply time{margin-left:10px;color:#8290a4;font-size:9px}
+.empty-replies{margin:12px 2px;color:#8995a8;font-size:11px}
+@media(max-width:720px){.path-input{font-size:11px}.path-go{padding:7px 10px}.reply-action{opacity:1}.thread-panel{margin-left:0}}
