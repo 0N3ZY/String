@@ -95,6 +95,7 @@ export default function Home() {
   function openDM() {
     const existing = tabs.find((tab) => tab.id === "alex");
     if (!existing) setTabs((current) => [...current, { id: "alex", title: "Alex Morgan", subtitle: "Direct message", kind: "dm" }]);
+    else setTabs((current) => current.map((tab) => tab.id === "alex" ? { ...tab, title: "Alex Morgan", subtitle: "Direct message", kind: "dm" } : tab));
     setActiveTab("alex");
     setThreadRootId(null);
     setPathInput(`${activeServer.name} / Direct messages / Alex Morgan`);
@@ -187,7 +188,7 @@ export default function Home() {
           <button className="mobile-menu" aria-label="Open navigation" onClick={() => setMobileSidebar(!mobileSidebar)}><Menu /></button>
           <div className="chat-tabs">
             {tabs.map((tab) => (
-              <button key={tab.id} className={`chat-tab ${activeTab === tab.id ? "current" : ""}`} onClick={() => { setActiveTab(tab.id); if (tab.kind === "channel") setActiveChannel(tab.title); }}>
+              <button key={tab.id} className={`chat-tab ${activeTab === tab.id ? "current" : ""}`} onClick={() => { setActiveTab(tab.id); if (tab.kind === "channel") { setActiveChannel(tab.title); setPathInput(`${tab.subtitle} / Community / ${tab.title}`); setThreadRootId(null); } else setPathInput(`${tab.subtitle} / ${tab.title}`); }}>
                 <span className="tab-title">{tab.kind === "channel" ? <Hash size={13} /> : <AtSign size={13} />}{tab.title}</span>
                 <span className="tab-subtitle">{tab.subtitle}</span>
                 <span className="tab-close" role="button" aria-label={`Close ${tab.title}`} onClick={(event) => closeTab(event, tab.id)}><X size={13} /></span>
