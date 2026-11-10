@@ -201,8 +201,8 @@ export default function Home() {
 
         <div className="content-area">
           <div className="search-bar">
-            <div className="breadcrumb"><Search size={19} /></div>
-            <input className="path-input" aria-label="Channel path" placeholder="Workspace / Community / channel / reply / original message" value={pathInput} onChange={(event) => setPathInput(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") navigatePath(); }} />
+            <div className="breadcrumb"><Search size={19} /><input className="path-input" aria-label="Channel path" placeholder="Workspace / Community / channel / reply / original message" value={pathInput} onChange={(event) => setPathInput(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") navigatePath(); }} /></div>
+            <input aria-label="Search messages" placeholder="Search messages" value={search} onChange={(event) => { setSearch(event.target.value); setSearchOpen(true); }} onFocus={() => setSearchOpen(true)} />
             <button className="path-go" onClick={navigatePath}>Go</button>
           </div>
 
