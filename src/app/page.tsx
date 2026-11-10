@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type MouseEvent } from "react";
 import {
   AtSign, Bell, Check, CheckCheck, ChevronDown, Compass, Hash,
   Headphones, Menu, MessageCircle, MoreHorizontal, Plus, Search,
@@ -74,7 +74,7 @@ export default function Home() {
     setMobileSidebar(false);
   }
 
-  function closeTab(event: React.MouseEvent, id: string) {
+  function closeTab(event: MouseEvent, id: string) {
     event.stopPropagation();
     if (tabs.length === 1) return;
     const next = tabs.filter((tab) => tab.id !== id);
