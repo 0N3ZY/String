@@ -44,6 +44,9 @@ export default function Home() {
   ]);
   const [activeTab, setActiveTab] = useState("general");
   const [messages, setMessages] = useState<Message[]>(initialMessages);
+  const [threadRootId, setThreadRootId] = useState<number | null>(null);
+  const [threadReplies, setThreadReplies] = useState<Record<number, Message[]>>({});
+  const [pathInput, setPathInput] = useState("Studio / Community / general");
   const [draft, setDraft] = useState("");
   const [search, setSearch] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
@@ -54,6 +57,7 @@ export default function Home() {
   const [notice, setNotice] = useState("");
 
   const currentTab = tabs.find((tab) => tab.id === activeTab) ?? tabs[0];
+  const threadRoot = messages.find((message) => message.id === threadRootId) ?? null;
   const visibleMessages = useMemo(() => {
     if (!search.trim()) return messages;
     return messages.filter((message) => message.text.toLowerCase().includes(search.toLowerCase()) || message.author.toLowerCase().includes(search.toLowerCase()));
@@ -61,16 +65,39 @@ export default function Home() {
 
   function openChannel(name: string) {
     setActiveChannel(name);
-    const existing = tabs.find((tab) => tab.id === name);
-    if (!existing) setTabs((current) => [...current, { id: name, title: name, subtitle: activeServer.name, kind: "channel" }]);
-    setActiveTab(name);
+    setTabs((current) => current.map((tab) => tab.id === activeTab ? { ...tab, title: name, subtitle: activeServer.name, kind: "channel" } : tab));
+    setThreadRootId(null);
+    setPathInput(`${activeServer.name} / Community / ${name}`);
     setMobileSidebar(false);
+  }
+
+  function navigatePath() {
+    const parts = pathInput.split(" / ").map((part) => part.trim()).filter(Boolean);
+    const channelPart = parts.find((part) => channels.some((channel) => channel.name.toLowerCase() === part.toLowerCase()));
+    if (!channelPart) { showNotice("Path not recognised. Try: Studio / Community / general"); return; }
+    const channelName = channels.find((channel) => channel.name.toLowerCase() === channelPart.toLowerCase())!.name;
+    setActiveChannel(channelName);
+    setTabs((current) => current.map((tab) => tab.id === activeTab ? { ...tab, title: channelName, subtitle: activeServer.name, kind: "channel" } : tab));
+    const replyMarker = parts.findIndex((part) => part.toLowerCase() === "reply");
+    if (replyMarker >= 0) {
+      const originalText = parts.slice(replyMarker + 1).join(" / ").replace(/^["“]|["”]$/g, "");
+      const original = messages.find((message) => message.text === originalText) ?? messages.find((message) => message.text.toLowerCase().includes(originalText.toLowerCase()));
+      if (original) setThreadRootId(original.id); else { setThreadRootId(null); showNotice("Could not find that original message in this channel"); }
+    } else setThreadRootId(null);
+    setMobileSidebar(false);
+  }
+
+  function openThread(message: Message) {
+    setThreadRootId(message.id);
+    setPathInput(`${activeServer.name} / Community / ${currentTab?.title ?? activeChannel} / reply / "${message.text}"`);
   }
 
   function openDM() {
     const existing = tabs.find((tab) => tab.id === "alex");
     if (!existing) setTabs((current) => [...current, { id: "alex", title: "Alex Morgan", subtitle: "Direct message", kind: "dm" }]);
     setActiveTab("alex");
+    setThreadRootId(null);
+    setPathInput(`${activeServer.name} / Direct messages / Alex Morgan`);
     setMobileSidebar(false);
   }
 
@@ -86,7 +113,9 @@ export default function Home() {
     const text = draft.trim();
     if (!text) return;
     const now = new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
-    setMessages((current) => [...current, { id: Date.now(), author: "You", initials: "YO", time: now, text, color: "lavender", mine: true }]);
+    const newMessage: Message = { id: Date.now(), author: "You", initials: "YO", time: now, text, color: "lavender", mine: true };
+    if (threadRootId !== null) setThreadReplies((current) => ({ ...current, [threadRootId]: [...(current[threadRootId] ?? []), newMessage] }));
+    else setMessages((current) => [...current, newMessage]);
     setDraft("");
     setShowEmoji(false);
     setShowAttach(false);
@@ -107,7 +136,7 @@ export default function Home() {
             <button key={server.id} title={server.name} aria-label={server.name}
               className={`server-icon ${activeServer.id === server.id ? "selected" : ""}`}
               style={{ backgroundColor: server.color }}
-              onClick={() => { setActiveServer(server); setActiveChannel("general"); showNotice(`Switched to ${server.name}`); }}>
+              onClick={() => { setActiveServer(server); setActiveChannel("general"); setTabs((current) => current.map((tab) => tab.id === activeTab ? { ...tab, title: "general", subtitle: server.name, kind: "channel" } : tab)); setThreadRootId(null); setPathInput(`${server.name} / Community / general`); showNotice(`Switched to ${server.name}`); }}>
               {server.letter}
               {server.id === "art" && <span className="server-unread">2</span>}
             </button>
@@ -171,11 +200,10 @@ export default function Home() {
 
         <div className="content-area">
           <div className="search-bar">
-            <div className="breadcrumb"><Search size={19} /><span>{activeServer.name} / Community / {currentTab?.title ?? activeChannel}</span></div>
-            <input aria-label="Search messages" placeholder="Search messages" value={search} onChange={(event) => { setSearch(event.target.value); setSearchOpen(true); }} onFocus={() => setSearchOpen(true)} />
-            <kbd>Ctrl K</kbd>
+            <div className="breadcrumb"><Search size={19} /></div>
+            <input className="path-input" aria-label="Channel path" placeholder="Workspace / Community / channel / reply / original message" value={pathInput} onChange={(event) => setPathInput(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") navigatePath(); }} />
+            <button className="path-go" onClick={navigatePath}>Go</button>
           </div>
-          {searchOpen && search && <div className="search-hint">{visibleMessages.length} matching message{visibleMessages.length === 1 ? "" : "s"} <button onClick={() => { setSearch(""); setSearchOpen(false); }}>Clear search</button></div>}
 
           <div className="channel-header">
             <div className="channel-heading"><Hash size={24} /><div><h1>{currentTab?.kind === "dm" ? currentTab.title : currentTab?.title ?? activeChannel}</h1><p>{currentTab?.kind === "dm" ? "Your private conversation." : "The place for a little bit of everything."}</p></div></div>
@@ -188,19 +216,21 @@ export default function Home() {
 
           <div className="message-scroll">
             <div className="date-divider"><span />Today, November 10<span /></div>
-            {visibleMessages.map((message) => (
+            {messages.map((message) => (
               <article key={message.id} className={`message-row ${message.mine ? "mine" : ""}`}>
                 {!message.mine && <div className={`avatar ${message.color}`}>{message.initials}</div>}
                 <div className="message-content">
                   <div className="message-meta"><strong>{message.author}</strong><time>{message.time}</time></div>
                   <div className={`message-bubble ${message.mine ? "outgoing" : ""}`}>{message.text}</div>
+                  <button className="reply-action" onClick={() => openThread(message)}>Reply</button>
                   {message.reaction && <button className="reaction" onClick={() => setMessages((current) => current.map((item) => item.id === message.id ? { ...item, reaction: item.reaction === 3 ? 4 : 3 } : item))}><span>♡</span> {message.reaction}</button>}
                   {message.mine && <div className="delivery">Delivered <CheckCheck size={13} /></div>}
                 </div>
                 {message.mine && <div className="avatar lavender">{message.initials}</div>}
               </article>
             ))}
-            {!search && <div className="typing-indicator"><span>•••</span> Jamie is typing</div>}
+            {threadRoot && <section className="thread-panel"><div className="thread-heading"><div><strong>Replies</strong><small>Replying to {threadRoot.author}</small></div><button aria-label="Close replies" onClick={() => { setThreadRootId(null); setPathInput(`${activeServer.name} / Community / ${currentTab?.title ?? activeChannel}`); }}><X size={16}/></button></div><div className="thread-original"><strong>{threadRoot.author}</strong><p>{threadRoot.text}</p></div>{(threadReplies[threadRoot.id] ?? []).map((reply) => <div className="thread-reply" key={reply.id}><strong>{reply.author}</strong><time>{reply.time}</time><p>{reply.text}</p></div>)}{(threadReplies[threadRoot.id] ?? []).length === 0 && <p className="empty-replies">No replies yet. Start the conversation.</p>}</section>}
+            {!threadRoot && <div className="typing-indicator"><span>•••</span> Jamie is typing</div>}
           </div>
 
           <div className="composer-wrap">
@@ -208,12 +238,12 @@ export default function Home() {
             {showEmoji && <div className="emoji-popover">{["😊","😂","❤️","👋","🎉","🔥","👍","✨"].map((emoji) => <button key={emoji} onClick={() => setDraft((value) => value + emoji)}>{emoji}</button>)}</div>}
             <div className="composer">
               <button className="composer-add" aria-label="Attach" onClick={() => { setShowAttach(!showAttach); setShowEmoji(false); }}><Plus size={23} /></button>
-              <textarea value={draft} onChange={(event) => setDraft(event.target.value)} placeholder={`Message #${currentTab?.title ?? activeChannel}...`} rows={1}
+              <textarea value={draft} onChange={(event) => setDraft(event.target.value)} placeholder={threadRoot ? "Reply to this message..." : `Message #${currentTab?.title ?? activeChannel}...`} rows={1}
                 onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); sendMessage(); } }} />
               <button className="emoji-button" aria-label="Emoji" onClick={() => { setShowEmoji(!showEmoji); setShowAttach(false); }}><Smile size={21} /></button>
               <button className="send-button" aria-label="Send message" onClick={sendMessage}><Send size={20} /></button>
             </div>
-            <div className="composer-help"><span>Enter to send · Shift + Enter for a new line</span><span>Keep it kind. Keep it curious.</span></div>
+            <div className="composer-help"><span>{threadRoot ? "Replying in thread · " : ""}Enter to send · Shift + Enter for a new line</span><span>Keep it kind. Keep it curious.</span></div>
           </div>
         </div>
       </section>
